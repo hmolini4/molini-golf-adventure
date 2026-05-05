@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Top 100 Golf Courses of the World</title>
+<title>The Molini Family Golf Adventure</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
   :root {
     --cream: #f5f0e8; --deep-green: #1a2e1a; --mid-green: #2d4a2d; --sage: #5c7a5c;
@@ -191,6 +193,28 @@
   .list-toggle-btn:first-child { border-right: 1px solid var(--border); }
   .list-toggle-btn.active { background: var(--gold); color: var(--deep-green); font-weight: bold; }
   .list-toggle-btn:not(.active):hover { background: rgba(201,168,76,0.12); color: var(--cream); }
+
+  /* Google Drive sync bar */
+  .sync-bar {
+    background: #0d180d; border-bottom: 1px solid var(--border);
+    padding: 10px 24px; display: flex; align-items: center; justify-content: center; gap: 12px;
+    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px; flex-wrap: wrap;
+  }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .sync-dot.grey   { background: #555; }
+  .sync-dot.yellow { background: #c9a84c; animation: pulse 1.2s infinite; }
+  .sync-dot.green  { background: #5aaa5a; }
+  .sync-dot.red    { background: #cc5555; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .sync-status { color: var(--muted); }
+  .sync-btn {
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    background: transparent; border: 1px solid var(--border); border-radius: 3px;
+    color: var(--gold); padding: 4px 12px; cursor: pointer; transition: all 0.2s;
+  }
+  .sync-btn:hover { background: rgba(201,168,76,0.15); }
+  .no-results { padding: 60px; text-align: center; font-style: italic; color: var(--muted); display: none; }
+
   footer {
     background: #0a120a; border-top: 1px solid var(--border); padding: 26px 40px;
     text-align: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); line-height: 1.8;
@@ -304,6 +328,12 @@
   <span class="legend-item"><span class="legend-dot" style="background:rgba(255,255,255,0.15)"></span>Off-season</span>
   <span style="width:1px;height:16px;background:var(--border);margin:0 6px"></span>
   <span class="legend-item" style="color:var(--sage);font-size:12px">Click any row to log a round · Data saved in your browser</span>
+</div>
+
+<div class="sync-bar" id="sync-bar">
+  <span class="sync-dot grey" id="sync-dot"></span>
+  <span class="sync-status" id="sync-status">Google Drive — not connected</span>
+  <button class="sync-btn" id="sync-btn" onclick="handleSyncBtn()">Connect Drive</button>
 </div>
 
 <div id="main-table">
@@ -521,16 +551,191 @@ const COURSES=[
   {rank:100,private:false, name:'Sotogrande (Real Club de Golf)',    type:'Parkland',               loc:'Sotogrande, Cádiz, Spain',                 country:'🇪🇸',arch:'Robert Trent Jones, 1964',             season:'mild-season',    m:[1,1,2,2,2,2,2,2,2,2,2,1]},
 ];
 
+// ── GOOGLE DRIVE SYNC ────────────────────────────────────────────────────────
+const CLIENT_ID = '26937520696-310eatcqdug3a3jpjeo5ndl6m9id1rgs.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+const DRIVE_FILE_WORLD = 'molini_golf_world.json';
+const DRIVE_FILE_US    = 'molini_golf_us.json';
+
+let tokenClient = null;
+let driveToken  = null;
+let driveFileIds = { world: null, us: null };
+
+function driveFileName(){ return activeList==='world' ? DRIVE_FILE_WORLD : DRIVE_FILE_US; }
+
+function setSyncStatus(state, msg){
+  const dot = document.getElementById('sync-dot');
+  const status = document.getElementById('sync-status');
+  const btn = document.getElementById('sync-btn');
+  dot.className = 'sync-dot ' + state; // grey | yellow | green | red
+  status.textContent = msg;
+  if(state==='green'){
+    btn.textContent = 'Disconnect';
+    btn.style.borderColor = 'rgba(90,170,90,0.4)';
+    btn.style.color = '#7acc7a';
+  } else if(state==='red'){
+    btn.textContent = 'Retry';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  } else if(state==='yellow'){
+    btn.textContent = 'Syncing…';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  } else {
+    btn.textContent = 'Connect Drive';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
+
+function handleSyncBtn(){
+  if(driveToken){
+    // Disconnect
+    driveToken = null;
+    driveFileIds = { world: null, us: null };
+    setSyncStatus('grey', 'Google Drive — disconnected');
+    document.getElementById('sync-btn').textContent = 'Connect Drive';
+  } else {
+    initDriveAuth();
+  }
+}
+
+function initDriveAuth(){
+  if(!window.google){ setSyncStatus('red','Google API not loaded — check connection'); return; }
+  setSyncStatus('yellow','Connecting to Google Drive…');
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if(resp.error){ setSyncStatus('red','Sign-in failed: ' + resp.error); return; }
+      driveToken = resp.access_token;
+      setSyncStatus('yellow','Loading your data from Drive…');
+      await loadAllFromDrive();
+      setSyncStatus('green','Google Drive — synced ✓');
+    }
+  });
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+}
+
+async function driveRequest(method, url, body=null){
+  const opts = {
+    method,
+    headers: { Authorization: 'Bearer ' + driveToken }
+  };
+  if(body){
+    opts.headers['Content-Type'] = method==='PATCH'||method==='POST' ? 'application/json' : 'application/octet-stream';
+    opts.body = typeof body === 'string' ? body : JSON.stringify(body);
+  }
+  const r = await fetch(url, opts);
+  if(!r.ok) throw new Error(await r.text());
+  return r;
+}
+
+async function findOrCreateFile(filename){
+  // Search appDataFolder for filename
+  const search = await driveRequest('GET',
+    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${filename}'&fields=files(id,name)`);
+  const data = await search.json();
+  if(data.files && data.files.length > 0) return data.files[0].id;
+  // Create it
+  const meta = { name: filename, parents: ['appDataFolder'] };
+  const create = await driveRequest('POST',
+    'https://www.googleapis.com/drive/v3/files?fields=id',
+    JSON.stringify(meta));
+  const created = await create.json();
+  return created.id;
+}
+
+async function readDriveFile(fileId){
+  const r = await driveRequest('GET',
+    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+  const text = await r.text();
+  return text ? JSON.parse(text) : {};
+}
+
+async function writeDriveFile(fileId, data){
+  await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: 'Bearer ' + driveToken,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+}
+
+async function loadAllFromDrive(){
+  try {
+    // Load both lists
+    for(const list of ['world','us']){
+      const fname = list==='world' ? DRIVE_FILE_WORLD : DRIVE_FILE_US;
+      const fid = await findOrCreateFile(fname);
+      driveFileIds[list] = fid;
+      try {
+        const data = await readDriveFile(fid);
+        // Merge with localStorage (Drive wins)
+        const lsKey = list==='world' ? SK_WORLD : SK_US;
+        localStorage.setItem(lsKey, JSON.stringify(data));
+      } catch(e){
+        // File empty or new — that's fine
+      }
+    }
+    // Reload current list's playedData from fresh localStorage
+    loadData();
+    rebuildAllTbodies();
+    filterCourses();
+    updateStats();
+  } catch(e){
+    setSyncStatus('red', 'Drive load failed — using local data');
+    console.error(e);
+  }
+}
+
+async function saveToDrive(){
+  if(!driveToken) return; // not connected, localStorage already saved
+  setSyncStatus('yellow','Saving to Drive…');
+  try {
+    const fname = driveFileName();
+    const list = activeList;
+    if(!driveFileIds[list]){
+      driveFileIds[list] = await findOrCreateFile(fname);
+    }
+    const lsKey = list==='world' ? SK_WORLD : SK_US;
+    const raw = localStorage.getItem(lsKey);
+    const data = raw ? JSON.parse(raw) : {};
+    await writeDriveFile(driveFileIds[list], data);
+
+    // Also sync the other list if it was cross-synced
+    const otherList = list==='world'?'us':'world';
+    const otherSK = otherList==='world'?SK_WORLD:SK_US;
+    const otherFname = otherList==='world'?DRIVE_FILE_WORLD:DRIVE_FILE_US;
+    if(!driveFileIds[otherList]){
+      driveFileIds[otherList] = await findOrCreateFile(otherFname);
+    }
+    const otherRaw = localStorage.getItem(otherSK);
+    const otherData = otherRaw ? JSON.parse(otherRaw) : {};
+    await writeDriveFile(driveFileIds[otherList], otherData);
+
+    setSyncStatus('green','Google Drive — synced ✓');
+  } catch(e){
+    setSyncStatus('red','Drive save failed — data in local backup');
+    console.error(e);
+  }
+}
+
 // ── STORAGE ──────────────────────────────────────────────────────────────────
 const SK_WORLD='golf_top100_v3';
 const SK_US='golf_us100_v1';
 let playedData={};
-let activeList='world'; // 'world' or 'us'
+let activeList='world';
 
 function currentSK(){ return activeList==='world'?SK_WORLD:SK_US; }
 function currentCourses(){ return activeList==='world'?COURSES:US_COURSES; }
 function loadData(){ try{ const r=localStorage.getItem(currentSK()); playedData=r?JSON.parse(r):{}; }catch(e){ playedData={}; } }
-function saveData(){ try{ localStorage.setItem(currentSK(),JSON.stringify(playedData)); }catch(e){} }
+function saveData(){
+  try{ localStorage.setItem(currentSK(),JSON.stringify(playedData)); }catch(e){}
+  saveToDrive(); // async, non-blocking
+}
 
 // ── US TOP 100 (Golf Digest 2025-26) ─────────────────────────────────────────
 const US_COURSES=[
@@ -850,6 +1055,29 @@ document.getElementById('section-all').style.display='';
 document.querySelectorAll('.section:not(#section-all)').forEach(s=>s.style.display='none');
 updateStats();
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+// Auto-init Drive when Google APIs are ready
+window.addEventListener('load', ()=>{
+  const waitForGoogle = setInterval(()=>{
+    if(window.google && window.google.accounts){
+      clearInterval(waitForGoogle);
+      // Silent token refresh — won't show popup, just connects if already authorized
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        prompt: '',
+        callback: async (resp) => {
+          if(resp.error) return; // not previously authorized, user clicks Connect Drive
+          driveToken = resp.access_token;
+          setSyncStatus('yellow','Reconnecting to Drive…');
+          await loadAllFromDrive();
+          setSyncStatus('green','Google Drive — synced ✓');
+        }
+      });
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+  }, 300);
+});
 </script>
 </body>
 </html>
