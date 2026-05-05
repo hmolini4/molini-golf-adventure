@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top 100 Golf Courses of the World</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5f0e8; --deep-green: #1a2e1a; --mid-green: #2d4a2d; --sage: #5c7a5c;
+    --gold: #c9a84c; --gold-light: #e8c96e; --warm-white: #faf7f2;
+    --muted: #6b6b5a; --border: rgba(201,168,76,0.3);
+    --played-green: #3a7a3a; --played-bg: rgba(58,122,58,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--deep-green); color: var(--cream); font-family: 'Libre Baskerville', Georgia, serif; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(160deg, #0d1f0d 0%, #1a2e1a 40%, #243824 100%);
+    padding: 50px 40px 40px; text-align: center; border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  header::before {
+    content: ''; position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .flag-line { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 16px; opacity: 0.8; }
+  h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 50px); font-weight: 700; color: var(--warm-white); line-height: 1.1; margin-bottom: 10px; }
+  h1 em { color: var(--gold-light); font-style: italic; }
+  .subtitle { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; color: var(--sage); text-transform: uppercase; margin-top: 12px; }
+  .source-note { font-size: 12px; color: var(--muted); margin-top: 14px; font-style: italic; }
+  .progress-stats { display: flex; justify-content: center; gap: 36px; margin-top: 20px; flex-wrap: wrap; }
+  .stat-item { text-align: center; }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--gold-light); font-weight: 700; }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+  .progress-bar-wrap { margin: 18px auto 0; max-width: 480px; background: rgba(255,255,255,0.07); border-radius: 3px; height: 5px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
+
+  .controls {
+    background: #111e11; border-bottom: 1px solid var(--border);
+    padding: 18px 40px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center;
+  }
+  .controls input {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 4px;
+    color: var(--cream); font-family: 'DM Mono', monospace; font-size: 12px;
+    padding: 9px 14px; width: 230px; outline: none; transition: border-color 0.2s;
+  }
+  .controls input::placeholder { color: var(--muted); }
+  .controls input:focus { border-color: var(--gold); }
+  .filter-btn {
+    background: transparent; border: 1px solid var(--border); border-radius: 4px;
+    color: var(--cream); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px;
+    padding: 9px 13px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; white-space: nowrap;
+  }
+  .filter-btn:hover { background: rgba(201,168,76,0.15); border-color: var(--gold); }
+  .filter-btn.active { background: var(--gold); color: var(--deep-green); border-color: var(--gold); font-weight: bold; }
+  .filter-btn.played-active { background: #2d6b2d; border-color: #4a9a4a; color: #aae0aa; font-weight: bold; }
+  .ctl-divider { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+
+  .legend {
+    background: #0f1a0f; border-bottom: 1px solid var(--border);
+    padding: 14px 40px; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; align-items: center;
+  }
+  .legend-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--cream); opacity: 0.85; }
+  .legend-dot { width: 11px; height: 11px; border-radius: 50%; }
+
+  .section { margin: 0; }
+  .section-header {
+    background: linear-gradient(90deg, #1a2e1a 0%, #243824 100%);
+    border-top: 1px solid var(--border); border-bottom: 1px solid rgba(201,168,76,0.15);
+    padding: 16px 40px; display: flex; align-items: center; gap: 16px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .section-season-badge {
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; padding: 5px 12px; border-radius: 2px; font-weight: bold; white-space: nowrap;
+  }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--warm-white); }
+  .section-count { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #0f1a0f; }
+  thead th {
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.05); white-space: nowrap;
+  }
+  thead th:first-child { padding-left: 40px; width: 52px; }
+  thead th:last-child { padding-right: 40px; }
+  tbody tr { background: #1a2e1a; border-bottom: 1px solid rgba(255,255,255,0.06); transition: background 0.15s; cursor: pointer; }
+  tbody tr:nth-child(even) { background: #1e331e; }
+  tbody tr:hover { background: #243d24; }
+  tbody tr.played-row { background: #1e3a1e; }
+  tbody tr.played-row:hover { background: #244424; }
+  tbody tr.hidden { display: none; }
+  td { padding: 13px 14px; vertical-align: middle; font-size: 14px; color: var(--cream); }
+  td:first-child { padding-left: 40px; }
+  td:last-child { padding-right: 40px; }
+
+  .rank { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--gold); font-weight: bold; }
+  .col-course { min-width: 220px; }
+  .course-name { font-weight: bold; color: #f0ede6; font-size: 15px; white-space: normal; word-break: break-word; line-height: 1.3; }
+  .course-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .private-badge { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: #b89a5a; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25); border-radius: 2px; padding: 2px 6px; white-space: nowrap; flex-shrink: 0; }
+  .course-type { font-family: 'DM Mono', monospace; font-size: 10px; color: #7aaa7a; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  .location-line { color: #9a9a88; font-size: 12px; font-style: italic; margin-top: 3px; }
+  .country-flag { font-size: 18px; }
+  .inline-flag { font-size: 14px; margin-left: 6px; vertical-align: middle; display: none; }
+  .architect { font-size: 12px; color: #9a9a88; }
+  .months-cell { display: flex; gap: 3px; flex-wrap: wrap; min-width: 185px; }
+  .month-pip { font-family: 'DM Mono', monospace; font-size: 9px; padding: 3px 5px; border-radius: 2px; letter-spacing: 0.5px; font-weight: bold; }
+  .pip-prime { background: rgba(80,180,80,0.25); color: #90d090; border: 1px solid rgba(80,180,80,0.3); }
+  .pip-ok { background: rgba(201,168,76,0.2); color: var(--gold-light); border: 1px solid rgba(201,168,76,0.25); }
+  .pip-off { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.06); text-decoration: line-through; }
+
+  .played-cell { text-align: center; min-width: 80px; vertical-align: middle; }
+  .check-btn {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);
+    background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; transition: all 0.2s; color: transparent; flex-shrink: 0;
+  }
+  .check-btn:hover { border-color: var(--gold); color: rgba(201,168,76,0.5); }
+  .check-btn.checked { background: var(--played-green); border-color: #5aaa5a; color: #fff; }
+  .rank-at-play { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gold); font-weight: bold; letter-spacing: 0.5px; }
+  .rank-drift { color: var(--sage); font-weight: normal; font-style: italic; }
+  .played-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: #6daa6d; margin-top: 4px; line-height: 1.6; }
+  .played-meta .companions { color: var(--sage); }
+
+  .grp-yearround .section-season-badge { background: rgba(80,180,80,0.2); color: #90d090; border: 1px solid rgba(80,180,80,0.35); }
+  .grp-summer .section-season-badge { background: rgba(255,170,60,0.18); color: #ffba60; border: 1px solid rgba(255,170,60,0.3); }
+  .grp-spring-fall .section-season-badge { background: rgba(120,190,255,0.18); color: #90d0ff; border: 1px solid rgba(120,190,255,0.3); }
+  .grp-summer-fall .section-season-badge { background: rgba(200,130,255,0.18); color: #d8a0ff; border: 1px solid rgba(200,130,255,0.3); }
+  .grp-winter .section-season-badge { background: rgba(255,120,120,0.18); color: #ff9090; border: 1px solid rgba(255,120,120,0.3); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.78); z-index: 1000; align-items: center; justify-content: center;
+    backdrop-filter: blur(5px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #1b301b; border: 1px solid var(--border); border-radius: 8px;
+    padding: 36px 40px; width: 90%; max-width: 480px; position: relative;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+  }
+  .modal-close { position: absolute; top: 14px; right: 18px; background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; line-height: 1; }
+  .modal-close:hover { color: var(--cream); }
+  .modal-type { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--sage); text-transform: uppercase; margin-bottom: 4px; }
+  .modal-rank { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); letter-spacing: 2px; margin-bottom: 6px; }
+  .modal-course-name { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--warm-white); margin-bottom: 4px; }
+  .modal-loc { font-size: 12px; color: var(--muted); font-style: italic; margin-bottom: 28px; }
+  .form-group { margin-bottom: 18px; }
+  .form-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 7px; }
+  .form-input {
+    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 4px; color: var(--cream); font-family: 'Libre Baskerville', serif;
+    font-size: 14px; padding: 10px 13px; outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--gold); }
+  .form-input::placeholder { color: var(--muted); font-style: italic; }
+  .companions-hint { font-size: 11px; color: var(--muted); margin-top: 6px; font-style: italic; }
+  .modal-actions { display: flex; gap: 12px; margin-top: 26px; }
+  .btn-save {
+    flex: 1; background: var(--gold); color: var(--deep-green); border: none; border-radius: 4px;
+    font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    font-weight: bold; padding: 12px; cursor: pointer; transition: background 0.2s;
+  }
+  .btn-save:hover { background: var(--gold-light); }
+  .btn-unplay {
+    background: transparent; border: 1px solid rgba(255,80,80,0.35); color: rgba(255,110,110,0.65);
+    border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px;
+    text-transform: uppercase; padding: 12px 14px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-unplay:hover { background: rgba(255,80,80,0.1); border-color: rgba(255,80,80,0.65); color: #ff8888; }
+  .btn-unplay.hidden { display: none; }
+
+  .list-toggle {
+    display: flex; gap: 0; margin: 20px auto 0; width: fit-content;
+    border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  }
+  .list-toggle-btn {
+    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; padding: 10px 24px; cursor: pointer;
+    background: transparent; border: none; color: var(--muted);
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .list-toggle-btn:first-child { border-right: 1px solid var(--border); }
+  .list-toggle-btn.active { background: var(--gold); color: var(--deep-green); font-weight: bold; }
+  .list-toggle-btn:not(.active):hover { background: rgba(201,168,76,0.12); color: var(--cream); }
+  footer {
+    background: #0a120a; border-top: 1px solid var(--border); padding: 26px 40px;
+    text-align: center; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); line-height: 1.8;
+  }
+
+  @media(max-width:768px){
+    header { padding: 28px 20px 24px; }
+    .controls { padding: 14px 12px; gap: 8px; }
+    .controls input { width: 100%; }
+    .ctl-divider { display: none; }
+    .filter-btn { font-size: 10px; padding: 8px 10px; }
+    .legend { padding: 12px 16px; gap: 12px; }
+    .legend-item:last-child { display: none; }
+    .section-header { padding: 12px 16px; gap: 10px; }
+    .section-title { font-size: 14px; }
+    footer { padding: 20px 16px; }
+
+    /* Switch table to card layout on mobile */
+    table { display: block; }
+    thead { display: none; }
+    tbody { display: block; }
+    tbody tr {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      grid-template-rows: auto auto;
+      gap: 0;
+      padding: 14px 16px 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer;
+    }
+    tbody tr td { padding: 0; border: none; }
+
+    /* Rank — far left, spans both rows */
+    tbody tr td:nth-child(1) {
+      grid-column: 1; grid-row: 1 / 3;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding-top: 3px;
+      font-size: 11px; color: var(--gold);
+      font-family: 'DM Mono', monospace; font-weight: bold;
+    }
+    /* Course name/type/loc */
+    tbody tr td:nth-child(2) {
+      grid-column: 2; grid-row: 1;
+      min-width: 0; padding-left: 8px;
+    }
+    .inline-flag { display: inline; }
+    .desktop-only { display: none; }
+    /* Country flag td hidden — flag is inline with location */
+    tbody tr td:nth-child(3) { display: none; }
+    /* Architect hidden */
+    tbody tr td:nth-child(4) { display: none; }
+    /* Month pips — second row */
+    tbody tr td:nth-child(5) {
+      grid-column: 2; grid-row: 2;
+      padding-top: 8px; padding-left: 8px;
+    }
+    /* Played button — spans both rows, right column */
+    tbody tr td:nth-child(6) {
+      grid-column: 3; grid-row: 1 / 3;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-left: 10px; min-width: unset;
+    }
+    .months-cell { min-width: unset; gap: 3px; }
+    .month-pip { font-size: 8px; padding: 2px 4px; }
+    .course-name { font-size: 14px; }
+    .course-type { font-size: 9px; }
+    .location-line { font-size: 11px; }
+    .played-meta { font-size: 9px; }
+    .check-btn { width: 28px; height: 28px; font-size: 12px; }
+    .col-course { min-width: unset; }
+    .modal { padding: 24px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="flag-line">A Lifetime of Memories on the World's Greatest Courses ⛳</div>
+  <h1>The Molini Family<br><em>Future Golf Adventure</em></h1>
+  <div class="subtitle" id="header-subtitle">The World Top 100 · A Father, Wife & Daughter Bucket List</div>
+  <div class="list-toggle">
+    <button class="list-toggle-btn active" id="btn-world" onclick="switchList('world', this)">World Top 100</button>
+    <button class="list-toggle-btn" id="btn-us" onclick="switchList('us', this)">US Top 100</button>
+  </div>
+  <div class="progress-stats">
+    <div class="stat-item"><div class="stat-num" id="stat-played">0</div><div class="stat-label">Played</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-remaining">100</div><div class="stat-label">Remaining</div></div>
+    <div class="stat-item"><div class="stat-num" id="stat-pct">0%</div><div class="stat-label">Complete</div></div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill"></div></div>
+  <div class="source-note">Rankings per GOLF Magazine / Golf Digest · Click any course row to log your round · Ranking noted at time of play</div>
+</header>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Search course, location, architect…" oninput="filterCourses()">
+  <div class="ctl-divider"></div>
+  <button class="filter-btn active" onclick="filterSeason('all',this)">All</button>
+  <button class="filter-btn" onclick="filterSeason('year-round',this)">Year-Round</button>
+  <button class="filter-btn" onclick="filterSeason('summer-primary',this)">Summer Only</button>
+  <button class="filter-btn" onclick="filterSeason('spring-fall',this)">Spring/Fall</button>
+  <button class="filter-btn" onclick="filterSeason('winter-friendly',this)">Winter-Friendly</button>
+  <button class="filter-btn" onclick="filterSeason('mild-season',this)">Mild Season</button>
+  <div class="ctl-divider"></div>
+  <button class="filter-btn" id="played-filter-btn" onclick="togglePlayedFilter(this)">✓ Played Only</button>
+</div>
+
+<div class="legend">
+  <span class="legend-title">Month Key</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#90d090"></span>Prime</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#c9a84c"></span>Shoulder</span>
+  <span class="legend-item"><span class="legend-dot" style="background:rgba(255,255,255,0.15)"></span>Off-season</span>
+  <span style="width:1px;height:16px;background:var(--border);margin:0 6px"></span>
+  <span class="legend-item" style="color:var(--sage);font-size:12px">Click any row to log a round · Data saved in your browser</span>
+</div>
+
+<div id="main-table">
+
+<!-- ALL COURSES ranked 1-100 (shown when "All" filter active) -->
+<div class="section" id="section-all" data-season="all">
+  <div class="section-header" style="background:linear-gradient(90deg,#111e11 0%,#1a2e1a 100%);">
+    <span class="section-season-badge" style="background:rgba(201,168,76,0.15);color:var(--gold-light);border:1px solid var(--border);">All Courses</span>
+    <span class="section-title" id="all-section-title">World Top 100 — Ranked #1 to #100</span>
+    <span class="section-count">100 courses</span>
+  </div>
+  <table><thead><tr><th>#</th><th>Course</th><th>Country</th><th>Architect</th><th>Best Months</th><th>Played</th></tr></thead>
+  <tbody id="tbody-all"></tbody></table>
+</div>
+
+<div class="section grp-yearround" data-season="year-round">
+  <div class="section-header">
+    <span class="section-season-badge">Year-Round Play</span>
+    <span class="section-title">Mild Climates — Play Any Month</span>
+    <span class="section-count" id="count-yearround"></span>
+  </div>
+  <table><thead><tr><th>#</th><th>Course</th><th>Country</th><th>Architect</th><th>Best Months</th><th>Played</th></tr></thead>
+  <tbody id="tbody-yearround"></tbody></table>
+</div>
+
+<div class="section grp-spring-fall" data-season="spring-fall">
+  <div class="section-header">
+    <span class="section-season-badge">Spring / Summer / Fall</span>
+    <span class="section-title">Temperate — Best Apr–Oct</span>
+    <span class="section-count" id="count-spring-fall"></span>
+  </div>
+  <table><thead><tr><th>#</th><th>Course</th><th>Country</th><th>Architect</th><th>Best Months</th><th>Played</th></tr></thead>
+  <tbody id="tbody-spring-fall"></tbody></table>
+</div>
+
+<div class="section grp-summer" data-season="summer-primary">
+  <div class="section-header">
+    <span class="section-season-badge">Summer Primary</span>
+    <span class="section-title">Short Season — Best Jun–Aug</span>
+    <span class="section-count" id="count-summer-primary"></span>
+  </div>
+  <table><thead><tr><th>#</th><th>Course</th><th>Country</th><th>Architect</th><th>Best Months</th><th>Played</th></tr></thead>
+  <tbody id="tbody-summer-primary"></tbody></table>
+</div>
+
+<div class="section grp-summer-fall" data-season="mild-season">
+  <div class="section-header">
+    <span class="section-season-badge">Mild / Shoulder Season</span>
+    <span class="section-title">Extended Play — Best Apr–Nov</span>
+    <span class="section-count" id="count-mild-season"></span>
+  </div>
+  <table><thead><tr><th>#</th><th>Course</th><th>Country</th><th>Architect</th><th>Best Months</th><th>Played</th></tr></thead>
+  <tbody id="tbody-mild-season"></tbody></table>
+</div>
+
+<div class="section grp-winter" data-season="winter-friendly">
+  <div class="section-header">
+    <span class="section-season-badge">Winter-Friendly</span>
+    <span class="section-title">Warm Climates — Peak Oct–Apr</span>
+    <span class="section-count" id="count-winter-friendly"></span>
+  </div>
+  <table><thead><tr><th>#</th><th>Course</th><th>Country</th><th>Architect</th><th>Best Months</th><th>Played</th></tr></thead>
+  <tbody id="tbody-winter-friendly"></tbody></table>
+</div>
+
+<p class="no-results" id="no-results">No courses match your search.</p>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-type" id="modal-type"></div>
+    <div class="modal-rank" id="modal-rank"></div>
+    <div class="modal-course-name" id="modal-name"></div>
+    <div class="modal-loc" id="modal-loc"></div>
+    <div class="form-group">
+      <label class="form-label">Ranking at Time of Play</label>
+      <input type="number" class="form-input" id="modal-rank-played" min="1" max="200" placeholder="e.g. 7 — auto-filled, edit if needed">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date Played</label>
+      <input type="date" class="form-input" id="modal-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Who did you play with?</label>
+      <input type="text" class="form-input" id="modal-companions" placeholder="e.g. Dad, Mike, John…">
+      <div class="companions-hint">Separate multiple names with commas</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <input type="text" class="form-input" id="modal-notes" placeholder="Score, conditions, memorable moments…">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="saveRound()">⛳ Log This Round</button>
+      <button class="btn-unplay hidden" id="btn-unplay" onclick="unlogRound()">Remove</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Rankings based on GOLF Magazine / Golf Digest World Top 100 ·<br>
+  Rankings shift over time — rounds are logged with the rank at time of play · 16 countries represented · Data saved locally in your browser
+</footer>
+
+<script>
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function monthPips(arr){
+  return arr.map((v,i)=>{
+    const cls=v===2?'pip-prime':v===1?'pip-ok':'pip-off';
+    return `<span class="month-pip ${cls}">${MONTHS[i]}</span>`;
+  }).join('');
+}
+
+const COURSES=[
+  {rank:1,  private:true,  name:'Pine Valley Golf Club',            type:'Parkland / Sandbelt',    loc:'Pine Hill, New Jersey, USA',               country:'🇺🇸',arch:'George Crump / H.S. Colt, 1919',       season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:2,  private:true,  name:'Cypress Point Club',               type:'Links / Clifftop',       loc:'Pebble Beach, California, USA',            country:'🇺🇸',arch:'Alister MacKenzie, 1928',              season:'year-round',     m:[1,1,1,2,2,2,2,2,2,2,1,1]},
+  {rank:3,  private:true,  name:'Augusta National Golf Club',       type:'Parkland',               loc:'Augusta, Georgia, USA',                    country:'🇺🇸',arch:'MacKenzie / Bobby Jones, 1933',        season:'winter-friendly',m:[2,2,2,2,2,1,1,1,1,2,2,2]},
+  {rank:4,  private:false, name:'Royal County Down GC',             type:'Links',                  loc:'Newcastle, Northern Ireland, UK',          country:'🇬🇧',arch:'Old Tom Morris, 1889',                 season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:5,  private:true,  name:'Shinnecock Hills GC',              type:'Links / Heathland',      loc:'Southampton, New York, USA',               country:'🇺🇸',arch:'William Flynn / Toomey, 1931',         season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,1,0]},
+  {rank:6,  private:true,  name:'National Golf Links of America',   type:'Links-style',            loc:'Southampton, New York, USA',               country:'🇺🇸',arch:'C.B. Macdonald, 1911',                 season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,1,0]},
+  {rank:7,  private:true,  name:'Royal Melbourne GC (West)',        type:'Sandbelt',               loc:'Melbourne, Victoria, Australia',           country:'🇦🇺',arch:'Alister MacKenzie, 1931',              season:'year-round',     m:[1,1,2,2,2,1,1,1,1,2,2,1]},
+  {rank:8,  private:true,  name:'Muirfield',                        type:'Links',                  loc:'Gullane, East Lothian, Scotland',          country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Old Tom Morris, 1891',                 season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:9,  private:false, name:'Royal Portrush GC (Dunluce)',      type:'Links',                  loc:'Portrush, Northern Ireland, UK',           country:'🇬🇧',arch:'H.S. Colt, 1929',                      season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:10, private:false, name:'Pebble Beach Golf Links',          type:'Clifftop Links',         loc:'Pebble Beach, California, USA',            country:'🇺🇸',arch:'Neville / Grant / MacKenzie',           season:'year-round',     m:[1,1,1,2,2,2,2,2,2,2,1,1]},
+  {rank:11, private:false, name:'Old Course at St Andrews',         type:'Links (Ancient)',        loc:'St Andrews, Fife, Scotland',               country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Traditional (ancient origins)',         season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:12, private:false, name:'Royal Dornoch GC',                 type:'Links',                  loc:'Dornoch, Sutherland, Scotland',            country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Old Tom Morris / John Sutherland',     season:'summer-primary', m:[0,0,0,1,2,2,2,2,1,0,0,0]},
+  {rank:13, private:true,  name:'Oakmont Country Club',             type:'Parkland',               loc:'Oakmont, Pennsylvania, USA',               country:'🇺🇸',arch:'H.C. Fownes, 1904',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:14, private:true,  name:'Fishers Island Club',              type:'Links / Coastal',        loc:'Fishers Island, New York, USA',            country:'🇺🇸',arch:'Seth Raynor, 1926',                    season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:15, private:true,  name:'Merion GC (East)',                 type:'Parkland',               loc:'Ardmore, Pennsylvania, USA',               country:'🇺🇸',arch:'Hugh Wilson, 1912',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:16, private:true,  name:'Seminole Golf Club',               type:'Links-style',            loc:'North Palm Beach, Florida, USA',           country:'🇺🇸',arch:'Donald Ross, 1929',                    season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:17, private:true,  name:"Friar's Head",                     type:'Links / Dunes',          loc:'Baiting Hollow, New York, USA',            country:'🇺🇸',arch:'Coore & Crenshaw, 2003',               season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:18, private:true,  name:'Sunningdale GC (Old)',             type:'Heathland',              loc:'Sunningdale, Surrey, England',             country:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',arch:'Willie Park Jr., 1901',                season:'mild-season',    m:[0,0,1,2,2,2,2,2,2,2,1,0]},
+  {rank:19, private:false, name:'Royal Birkdale GC',                type:'Links',                  loc:'Southport, Lancashire, England',           country:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',arch:'G. Lowe / F.W. Hawtree, 1897',         season:'mild-season',    m:[0,0,1,2,2,2,2,2,2,2,1,0]},
+  {rank:20, private:true,  name:'Winged Foot GC (West)',            type:'Parkland',               loc:'Mamaroneck, New York, USA',                country:'🇺🇸',arch:'A.W. Tillinghast, 1923',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:21, private:false, name:'Cabot Cliffs',                     type:'Cliffside Links',        loc:'Inverness, Nova Scotia, Canada',           country:'🇨🇦',arch:'Coore & Crenshaw, 2016',               season:'summer-primary', m:[0,0,0,0,1,2,2,2,1,0,0,0]},
+  {rank:22, private:false, name:'Cape Kidnappers',                  type:'Clifftop Parkland',      loc:"Hawke's Bay, New Zealand",                 country:'🇳🇿',arch:'Tom Doak, 2004',                       season:'year-round',     m:[2,2,2,1,1,1,1,1,1,1,2,2]},
+  {rank:23, private:true,  name:'Hirono GC',                        type:'Heathland / Parkland',   loc:'Hyogo Prefecture, Japan',                  country:'🇯🇵',arch:'C.H. Alison, 1932',                    season:'spring-fall',    m:[0,0,1,2,2,2,1,1,2,2,1,0]},
+  {rank:24, private:true,  name:'Sand Hills Golf Club',             type:'Dunes / Sandhills',      loc:'Mullen, Nebraska, USA',                    country:'🇺🇸',arch:'Coore & Crenshaw, 1995',               season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:25, private:false, name:'Ballybunion GC (Old)',             type:'Links',                  loc:'Ballybunion, County Kerry, Ireland',       country:'🇮🇪',arch:'Traditional / Tom Simpson, 1893',     season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:26, private:true,  name:'Royal Melbourne GC (East)',        type:'Sandbelt',               loc:'Melbourne, Victoria, Australia',           country:'🇦🇺',arch:'Alex Russell, 1932',                   season:'year-round',     m:[1,1,2,2,2,1,1,1,1,2,2,1]},
+  {rank:27, private:true,  name:'Prairie Dunes CC',                 type:'Dunes / Sandhills',      loc:'Hutchinson, Kansas, USA',                  country:'🇺🇸',arch:'Perry Maxwell, 1937',                  season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,1,0]},
+  {rank:28, private:true,  name:'Kingston Heath GC',                type:'Sandbelt',               loc:'Melbourne, Victoria, Australia',           country:'🇦🇺',arch:'D.G. Soutar / MacKenzie, 1925',        season:'year-round',     m:[1,1,2,2,2,1,1,1,1,2,2,1]},
+  {rank:29, private:true,  name:'Maidstone Club',                   type:'Links / Coastal',        loc:'East Hampton, New York, USA',              country:'🇺🇸',arch:'Willie Park Jr., 1922',                season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:30, private:false, name:'Royal Troon GC',                   type:'Links',                  loc:'Troon, Ayrshire, Scotland',                country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Willie Fernie, 1878',                  season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:31, private:true,  name:'Garden City Golf Club',            type:'Parkland',               loc:'Garden City, New York, USA',               country:'🇺🇸',arch:'Devereux Emmet / Walter Travis',       season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:32, private:false, name:'Bethpage State Park (Black)',      type:'Parkland',               loc:'Farmingdale, New York, USA',               country:'🇺🇸',arch:'A.W. Tillinghast, 1936',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:33, private:false, name:'Lahinch GC (Old)',                 type:'Links',                  loc:'Lahinch, County Clare, Ireland',           country:'🇮🇪',arch:'Old Tom Morris / MacKenzie, 1892',     season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:34, private:false, name:'Bandon Dunes (Bandon Dunes Crs.)', type:'Links / Dunes',          loc:'Bandon, Oregon, USA',                      country:'🇺🇸',arch:'David McLay Kidd, 1999',               season:'mild-season',    m:[0,1,1,2,2,2,2,2,2,2,1,0]},
+  {rank:35, private:false, name:'Pacific Dunes',                    type:'Links / Dunes',          loc:'Bandon, Oregon, USA',                      country:'🇺🇸',arch:'Tom Doak, 2001',                       season:'mild-season',    m:[0,1,1,2,2,2,2,2,2,2,1,0]},
+  {rank:36, private:false, name:'Carnoustie GC (Championship)',     type:'Links',                  loc:'Carnoustie, Angus, Scotland',              country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Old Tom Morris, 1842',                 season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:37, private:false, name:"Royal St George's GC",             type:'Links',                  loc:'Sandwich, Kent, England',                  country:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',arch:'Laidlaw Purves, 1887',                 season:'mild-season',    m:[0,0,1,2,2,2,2,2,2,2,1,0]},
+  {rank:38, private:true,  name:'Morfontaine GC',                   type:'Heathland / Parkland',   loc:'Morfontaine, Oise, France',                country:'🇫🇷',arch:'Tom Simpson, 1927',                    season:'mild-season',    m:[0,0,1,2,2,2,2,2,2,2,1,0]},
+  {rank:39, private:false, name:'County Sligo GC (Rosses Point)',   type:'Links',                  loc:'Rosses Point, County Sligo, Ireland',      country:'🇮🇪',arch:'H.S. Colt, 1894',                      season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:40, private:true,  name:'Los Angeles CC (North)',           type:'Parkland',               loc:'Los Angeles, California, USA',             country:'🇺🇸',arch:'George Thomas, 1921',                  season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:41, private:true,  name:'Crystal Downs CC',                 type:'Links-style / Dunes',    loc:'Frankfort, Michigan, USA',                 country:'🇺🇸',arch:'MacKenzie / Perry Maxwell, 1933',      season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:42, private:false, name:'Portmarnock GC (Championship)',    type:'Links',                  loc:'Portmarnock, County Dublin, Ireland',      country:'🇮🇪',arch:'W.C. Pickeman / George Ross, 1894',   season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:43, private:true,  name:'Riviera CC',                       type:'Parkland / Canyon',      loc:'Pacific Palisades, California, USA',       country:'🇺🇸',arch:'George Thomas, 1927',                  season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:44, private:false, name:'Highlands Links',                  type:'Links / River Valley',   loc:'Cape Breton Island, Nova Scotia, Canada',  country:'🇨🇦',arch:'Stanley Thompson, 1939',               season:'summer-primary', m:[0,0,0,0,1,2,2,2,1,0,0,0]},
+  {rank:45, private:false, name:'Trump Turnberry (Ailsa)',           type:'Links',                  loc:'Turnberry, Ayrshire, Scotland',            country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Willie Fernie / Philip Mackenzie Ross',season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:46, private:false, name:'Whistling Straits (Straits)',       type:'Links-style / Lakeside', loc:'Kohler, Wisconsin, USA',                   country:'🇺🇸',arch:'Pete Dye, 1998',                       season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:47, private:true,  name:'Southern Hills CC',                type:'Parkland / Prairie',     loc:'Tulsa, Oklahoma, USA',                     country:'🇺🇸',arch:'Perry Maxwell, 1936',                  season:'spring-fall',    m:[0,0,1,2,2,2,1,1,2,2,1,0]},
+  {rank:48, private:false, name:'The European Club',                type:'Links',                  loc:'Brittas Bay, County Wicklow, Ireland',     country:'🇮🇪',arch:'Pat Ruddy, 1992',                      season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:49, private:true,  name:'Tara Iti Golf Club',               type:'Links / Dunes',          loc:'Te Arai, Northland, New Zealand',          country:'🇳🇿',arch:'Tom Doak, 2015',                       season:'year-round',     m:[2,2,2,1,1,1,1,1,1,1,2,2]},
+  {rank:50, private:false, name:'Royal Lytham & St Annes GC',       type:'Links',                  loc:"St Annes-on-Sea, Lancashire, England",     country:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',arch:'T. Macaulay / H.S. Colt, 1886',        season:'mild-season',    m:[0,0,1,2,2,2,2,2,2,2,1,0]},
+  {rank:51, private:true,  name:'San Francisco Golf Club',          type:'Parkland / Heathland',   loc:'San Francisco, California, USA',           country:'🇺🇸',arch:'A.W. Tillinghast, 1915',               season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:52, private:true,  name:'Oakland Hills CC (South)',         type:'Parkland',               loc:'Bloomfield Hills, Michigan, USA',          country:'🇺🇸',arch:'Donald Ross, 1918',                    season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:53, private:true,  name:'Shoreacres Club',                  type:'Lakeside / Ravine',      loc:'Lake Bluff, Illinois, USA',                country:'🇺🇸',arch:'Seth Raynor, 1921',                    season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:54, private:true,  name:'Muirfield Village GC',             type:'Parkland',               loc:'Dublin, Ohio, USA',                        country:'🇺🇸',arch:'Nicklaus / Desmond Muirhead, 1974',     season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:55, private:false, name:'Streamsong (Blue)',                 type:'Sandhills / Dunes',      loc:'Streamsong, Florida, USA',                 country:'🇺🇸',arch:'Tom Doak, 2012',                       season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:56, private:false, name:'Barnbougle Dunes',                 type:'Links / Dunes',          loc:'Bridport, Tasmania, Australia',            country:'🇦🇺',arch:'Tom Doak / Mike Clayton, 2004',        season:'year-round',     m:[1,1,2,2,1,1,1,1,1,2,2,1]},
+  {rank:57, private:false, name:'New South Wales GC',               type:'Clifftop / Sandbelt',    loc:'La Perouse, Sydney, Australia',            country:'🇦🇺',arch:'MacKenzie / Eric Apperly, 1928',        season:'year-round',     m:[1,1,2,2,2,1,1,1,1,2,2,1]},
+  {rank:58, private:true,  name:"St. George's Hill GC (A&B)",       type:'Heathland',              loc:'Weybridge, Surrey, England',               country:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',arch:'H.S. Colt, 1913',                      season:'mild-season',    m:[0,0,1,2,2,2,2,2,2,2,1,0]},
+  {rank:59, private:false, name:'Cruden Bay GC',                    type:'Links',                  loc:'Cruden Bay, Aberdeenshire, Scotland',      country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Old Tom Morris / Tom Simpson, 1899',  season:'summer-primary', m:[0,0,0,1,2,2,2,2,1,0,0,0]},
+  {rank:60, private:false, name:'Royal Aberdeen GC',                type:'Links',                  loc:'Balgownie, Aberdeen, Scotland',            country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'R. Simpson / A. Simpson, 1888',        season:'summer-primary', m:[0,0,0,1,2,2,2,2,1,0,0,0]},
+  {rank:61, private:true,  name:'Swinley Forest GC',                type:'Heathland',              loc:'Ascot, Berkshire, England',                country:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',arch:'H.S. Colt, 1909',                      season:'mild-season',    m:[0,0,1,2,2,2,2,2,2,2,1,0]},
+  {rank:62, private:false, name:'Trump International GC (Aberdeen)',type:'Links / Dunes',          loc:'Balmedie, Aberdeenshire, Scotland',        country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Martin Hawtree, 2012',                 season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:63, private:false, name:'Prestwick GC',                     type:'Links (Historic)',        loc:'Prestwick, Ayrshire, Scotland',            country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Old Tom Morris, 1851',                 season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:64, private:false, name:'Cabot Cape Breton (Cabot Links)',  type:'Links',                  loc:'Inverness, Nova Scotia, Canada',           country:'🇨🇦',arch:'Rod Whitman, 2012',                    season:'summer-primary', m:[0,0,0,0,1,2,2,2,1,0,0,0]},
+  {rank:65, private:false, name:'Kingsbarns GC',                    type:'Links / Coastal',        loc:'Kingsbarns, Fife, Scotland',               country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Kyle Phillips, 2000',                  season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:66, private:false, name:'Wolf Creek Golf Club',             type:'Desert / Canyon',        loc:'Mesquite, Nevada, USA',                    country:'🇺🇸',arch:'Dennis Rider, 2000',                   season:'mild-season',    m:[1,1,2,2,2,1,1,1,2,2,2,1]},
+  {rank:67, private:true,  name:'Inverness Club',                   type:'Parkland',               loc:'Toledo, Ohio, USA',                        country:'🇺🇸',arch:'Donald Ross, 1903',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:68, private:false, name:'Royal Porthcawl GC',               type:'Links',                  loc:'Porthcawl, Mid Glamorgan, Wales',          country:'🏴󠁧󠁢󠁷󠁬󠁳󠁿',arch:'Charles Gibson, 1891',                 season:'mild-season',    m:[0,0,1,2,2,2,2,2,2,2,1,0]},
+  {rank:69, private:false, name:'Barnbougle Lost Farm',             type:'Links / Dunes',          loc:'Bridport, Tasmania, Australia',            country:'🇦🇺',arch:'Coore & Crenshaw, 2010',               season:'year-round',     m:[1,1,2,2,1,1,1,1,1,2,2,1]},
+  {rank:70, private:false, name:'Bandon Trails',                    type:'Forest / Dunes',         loc:'Bandon, Oregon, USA',                      country:'🇺🇸',arch:'Coore & Crenshaw, 2001',               season:'mild-season',    m:[0,1,1,2,2,2,2,2,2,2,1,0]},
+  {rank:71, private:false, name:'Pasatiempo GC',                    type:'Parkland / Heathland',   loc:'Santa Cruz, California, USA',              country:'🇺🇸',arch:'Alister MacKenzie, 1929',              season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:72, private:false, name:'Cabo del Sol (Ocean Course)',      type:'Clifftop / Desert Links', loc:'Los Cabos, Baja California, Mexico',       country:'🇲🇽',arch:'Jack Nicklaus, 1994',                  season:'winter-friendly',m:[2,2,2,2,2,1,1,1,1,2,2,2]},
+  {rank:73, private:true,  name:'Childress Hall (Upper)',            type:'Sandhills / Prairie',    loc:'Childress, Texas, USA',                    country:'🇺🇸',arch:'Tom Doak, 2025',                       season:'spring-fall',    m:[0,0,1,2,2,1,1,1,2,2,1,0]},
+  {rank:74, private:false, name:'Kauri Cliffs',                     type:'Clifftop / Coastal',     loc:'Matauri Bay, Northland, New Zealand',      country:'🇳🇿',arch:'David Harman, 2000',                   season:'year-round',     m:[2,2,2,1,1,1,1,1,1,1,2,2]},
+  {rank:75, private:true,  name:'Old Sandwich GC',                  type:'Links-style / Dunes',    loc:'Plymouth, Massachusetts, USA',             country:'🇺🇸',arch:'George Thomas Jr. / MacKay Laird',     season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:76, private:true,  name:'Sebonack GC',                      type:'Links / Coastal',        loc:'Southampton, New York, USA',               country:'🇺🇸',arch:'Nicklaus & Tom Doak, 2006',             season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:77, private:false, name:'St Andrews (New Course)',           type:'Links',                  loc:'St Andrews, Fife, Scotland',               country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'D. Anderson / Old Tom Morris, 1895',   season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:78, private:false, name:'Royal Liverpool GC (Hoylake)',     type:'Links',                  loc:'Hoylake, Wirral, England',                 country:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',arch:'R. Chambers / G. Morris, 1869',        season:'mild-season',    m:[0,0,1,2,2,2,2,2,2,2,1,0]},
+  {rank:79, private:true,  name:'The Country Club (Clyde/Squirrel)',type:'Parkland / Heathland',   loc:'Brookline, Massachusetts, USA',            country:'🇺🇸',arch:'William Flynn, 1909',                  season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:80, private:false, name:'Streamsong (Red)',                  type:'Sandhills / Dunes',      loc:'Streamsong, Florida, USA',                 country:'🇺🇸',arch:'Coore & Crenshaw, 2012',               season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:81, private:true,  name:'Victoria GC',                      type:'Sandbelt',               loc:'Cheltenham, Melbourne, Australia',         country:'🇦🇺',arch:'William Meader / William Park Jr.',     season:'year-round',     m:[1,1,2,2,2,1,1,1,1,2,2,1]},
+  {rank:82, private:true,  name:'Kawana Hotel GC (Fuji)',            type:'Clifftop / Coastal',     loc:'Ito, Shizuoka, Japan',                     country:'🇯🇵',arch:'C.H. Alison, 1936',                    season:'spring-fall',    m:[0,0,1,2,2,2,1,1,2,2,1,0]},
+  {rank:83, private:true,  name:'Mid Ocean Club',                   type:'Clifftop / Coastal',     loc:"Tucker's Town, Bermuda",                   country:'🇧🇲',arch:'C.B. Macdonald, 1924',                 season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:84, private:true,  name:'Peachtree Golf Club',              type:'Parkland',               loc:'Atlanta, Georgia, USA',                    country:'🇺🇸',arch:'R.T. Jones Sr. / Bobby Jones, 1948',   season:'winter-friendly',m:[2,2,2,2,2,1,1,1,1,2,2,2]},
+  {rank:85, private:false, name:'Keilir Golf Club',                 type:'Lava / Links-style',     loc:'Reykjanes Peninsula, Iceland',             country:'🇮🇸',arch:'Hannes Thorsteinsson, 2001',            season:'summer-primary', m:[0,0,0,0,1,2,2,2,1,0,0,0]},
+  {rank:86, private:true,  name:'Pine Valley GC (Australia)',       type:'Sandbelt',               loc:'Mount Eliza, Victoria, Australia',         country:'🇦🇺',arch:'Dick Wilson, 1961',                    season:'year-round',     m:[1,1,2,2,2,1,1,1,1,2,2,1]},
+  {rank:87, private:false, name:'Ballyliffin GC (Glashedy Links)', type:'Links',                  loc:'Ballyliffin, County Donegal, Ireland',     country:'🇮🇪',arch:'Pat Ruddy / Tom Craddock, 1995',     season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:88, private:false, name:'Carne Golf Links',                 type:'Links / Dunes',          loc:'Belmullet, County Mayo, Ireland',          country:'🇮🇪',arch:'Eddie Hackett, 1992',                  season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:89, private:true,  name:'CapRock Ranch',                    type:'Sandhills / Prairie',    loc:'Post, Texas, USA',                         country:'🇺🇸',arch:'Coore & Crenshaw, 2024',               season:'spring-fall',    m:[0,0,1,2,2,1,1,1,2,2,1,0]},
+  {rank:90, private:true,  name:'Quaker Ridge GC',                  type:'Parkland',               loc:'Scarsdale, New York, USA',                 country:'🇺🇸',arch:'A.W. Tillinghast, 1916',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:91, private:true,  name:'Olympic Club (Lake)',              type:'Parkland / Coastal',     loc:'San Francisco, California, USA',           country:'🇺🇸',arch:'Wilfrid Reid / Sam Whiting, 1917',     season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:92, private:false, name:'Waterville Golf Links',            type:'Links',                  loc:'Waterville, County Kerry, Ireland',        country:'🇮🇪',arch:'Eddie Hackett / Tom Fazio, 1889',      season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:93, private:false, name:'The Ocean Course at Kiawah',       type:'Links-style / Coastal',  loc:'Kiawah Island, South Carolina, USA',       country:'🇺🇸',arch:'Pete Dye, 1991',                       season:'winter-friendly',m:[2,2,2,2,2,1,1,1,2,2,2,2]},
+  {rank:94, private:true,  name:'Saucon Valley CC (Old)',            type:'Parkland',               loc:'Bethlehem, Pennsylvania, USA',             country:'🇺🇸',arch:'William Gordon, 1920',                  season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:95, private:true,  name:'Merion GC (West)',                  type:'Parkland',               loc:'Ardmore, Pennsylvania, USA',               country:'🇺🇸',arch:'Hugh Wilson, 1914',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:96, private:false, name:'Spyglass Hill GC',                 type:'Forest / Coastal',       loc:'Pebble Beach, California, USA',            country:'🇺🇸',arch:'Robert Trent Jones, 1966',             season:'year-round',     m:[1,1,1,2,2,2,2,2,2,2,1,1]},
+  {rank:97, private:false, name:'North Berwick GC (West Links)',    type:'Links (Historic)',        loc:'North Berwick, East Lothian, Scotland',    country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'David Strath, 1832',               season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:98, private:true,  name:'Loch Lomond GC',                   type:'Parkland / Lochside',    loc:'Luss, Loch Lomond, Scotland',              country:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',arch:'Tom Weiskopf / Jay Morrish, 1993',    season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,0,0]},
+  {rank:99, private:false, name:'Amata Spring CC (Kabul)',           type:'Parkland / Lakeside',    loc:'Chonburi, Thailand',                       country:'🇹🇭',arch:'Schmidt-Curley Design, 1993',          season:'winter-friendly',m:[2,2,1,1,0,0,0,0,1,2,2,2]},
+  {rank:100,private:false, name:'Sotogrande (Real Club de Golf)',    type:'Parkland',               loc:'Sotogrande, Cádiz, Spain',                 country:'🇪🇸',arch:'Robert Trent Jones, 1964',             season:'mild-season',    m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+];
+
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+const SK_WORLD='golf_top100_v3';
+const SK_US='golf_us100_v1';
+let playedData={};
+let activeList='world'; // 'world' or 'us'
+
+function currentSK(){ return activeList==='world'?SK_WORLD:SK_US; }
+function currentCourses(){ return activeList==='world'?COURSES:US_COURSES; }
+function loadData(){ try{ const r=localStorage.getItem(currentSK()); playedData=r?JSON.parse(r):{}; }catch(e){ playedData={}; } }
+function saveData(){ try{ localStorage.setItem(currentSK(),JSON.stringify(playedData)); }catch(e){} }
+
+// ── US TOP 100 (Golf Digest 2025-26) ─────────────────────────────────────────
+const US_COURSES=[
+  {rank:1,  private:true,  name:'Pine Valley Golf Club',            type:'Parkland / Sandbelt',    loc:'Pine Hill, New Jersey',          country:'🇺🇸',arch:'George Crump / H.S. Colt, 1919',       season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:2,  private:true,  name:'Cypress Point Club',               type:'Links / Clifftop',       loc:'Pebble Beach, California',       country:'🇺🇸',arch:'Alister MacKenzie, 1928',              season:'year-round',     m:[1,1,1,2,2,2,2,2,2,2,1,1]},
+  {rank:3,  private:true,  name:'Augusta National Golf Club',       type:'Parkland',               loc:'Augusta, Georgia',               country:'🇺🇸',arch:'MacKenzie / Bobby Jones, 1933',        season:'winter-friendly',m:[2,2,2,2,2,1,1,1,1,2,2,2]},
+  {rank:4,  private:true,  name:'Shinnecock Hills GC',              type:'Links / Heathland',      loc:'Southampton, New York',          country:'🇺🇸',arch:'William Flynn / Toomey, 1931',         season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,1,0]},
+  {rank:5,  private:true,  name:'National Golf Links of America',   type:'Links-style',            loc:'Southampton, New York',          country:'🇺🇸',arch:'C.B. Macdonald, 1911',                 season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,1,0]},
+  {rank:6,  private:false, name:'Pebble Beach Golf Links',          type:'Clifftop Links',         loc:'Pebble Beach, California',       country:'🇺🇸',arch:'Neville / Grant / MacKenzie',           season:'year-round',     m:[1,1,1,2,2,2,2,2,2,2,1,1]},
+  {rank:7,  private:true,  name:'Oakmont Country Club',             type:'Parkland',               loc:'Oakmont, Pennsylvania',          country:'🇺🇸',arch:'H.C. Fownes, 1904',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:8,  private:true,  name:'Merion GC (East)',                 type:'Parkland',               loc:'Ardmore, Pennsylvania',          country:'🇺🇸',arch:'Hugh Wilson, 1912',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:9,  private:true,  name:'Fishers Island Club',              type:'Links / Coastal',        loc:'Fishers Island, New York',       country:'🇺🇸',arch:'Seth Raynor, 1926',                    season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:10, private:true,  name:'Los Angeles CC (North)',           type:'Parkland',               loc:'Los Angeles, California',        country:'🇺🇸',arch:'George Thomas, 1921',                  season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:11, private:true,  name:'Seminole Golf Club',               type:'Links-style',            loc:'North Palm Beach, Florida',      country:'🇺🇸',arch:'Donald Ross, 1929',                    season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:12, private:true,  name:'Winged Foot GC (West)',            type:'Parkland',               loc:'Mamaroneck, New York',           country:'🇺🇸',arch:'A.W. Tillinghast, 1923',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:13, private:true,  name:"Friar's Head",                     type:'Links / Dunes',          loc:'Baiting Hollow, New York',       country:'🇺🇸',arch:'Coore & Crenshaw, 2003',               season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:14, private:true,  name:'Sand Hills Golf Club',             type:'Dunes / Sandhills',      loc:'Mullen, Nebraska',               country:'🇺🇸',arch:'Coore & Crenshaw, 1995',               season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:15, private:true,  name:'Crystal Downs CC',                 type:'Links-style / Dunes',    loc:'Frankfort, Michigan',            country:'🇺🇸',arch:'MacKenzie / Perry Maxwell, 1933',      season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:16, private:false, name:'Bandon Dunes (Bandon Dunes Crs.)', type:'Links / Dunes',          loc:'Bandon, Oregon',                 country:'🇺🇸',arch:'David McLay Kidd, 1999',               season:'mild-season',    m:[0,1,1,2,2,2,2,2,2,2,1,0]},
+  {rank:17, private:false, name:'Pacific Dunes',                    type:'Links / Dunes',          loc:'Bandon, Oregon',                 country:'🇺🇸',arch:'Tom Doak, 2001',                       season:'mild-season',    m:[0,1,1,2,2,2,2,2,2,2,1,0]},
+  {rank:18, private:true,  name:'Prairie Dunes CC',                 type:'Dunes / Sandhills',      loc:'Hutchinson, Kansas',             country:'🇺🇸',arch:'Perry Maxwell, 1937',                  season:'spring-fall',    m:[0,0,1,1,2,2,2,2,2,1,1,0]},
+  {rank:19, private:true,  name:'Maidstone Club',                   type:'Links / Coastal',        loc:'East Hampton, New York',         country:'🇺🇸',arch:'Willie Park Jr., 1922',                season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:20, private:true,  name:'Riviera CC',                       type:'Parkland / Canyon',      loc:'Pacific Palisades, California',  country:'🇺🇸',arch:'George Thomas, 1927',                  season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:21, private:true,  name:'Garden City Golf Club',            type:'Parkland',               loc:'Garden City, New York',          country:'🇺🇸',arch:'Devereux Emmet / Walter Travis',       season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:22, private:false, name:'Bethpage State Park (Black)',      type:'Parkland',               loc:'Farmingdale, New York',          country:'🇺🇸',arch:'A.W. Tillinghast, 1936',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:23, private:true,  name:'Southern Hills CC',                type:'Parkland / Prairie',     loc:'Tulsa, Oklahoma',                country:'🇺🇸',arch:'Perry Maxwell, 1936',                  season:'spring-fall',    m:[0,0,1,2,2,2,1,1,2,2,1,0]},
+  {rank:24, private:true,  name:'Shoreacres Club',                  type:'Lakeside / Ravine',      loc:'Lake Bluff, Illinois',           country:'🇺🇸',arch:'Seth Raynor, 1921',                    season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:25, private:true,  name:'San Francisco Golf Club',          type:'Parkland / Heathland',   loc:'San Francisco, California',      country:'🇺🇸',arch:'A.W. Tillinghast, 1915',               season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:26, private:true,  name:'Oakland Hills CC (South)',         type:'Parkland',               loc:'Bloomfield Hills, Michigan',     country:'🇺🇸',arch:'Donald Ross, 1918',                    season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:27, private:false, name:'Whistling Straits (Straits)',       type:'Links-style / Lakeside', loc:'Kohler, Wisconsin',              country:'🇺🇸',arch:'Pete Dye, 1998',                       season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:28, private:true,  name:'Muirfield Village GC',             type:'Parkland',               loc:'Dublin, Ohio',                   country:'🇺🇸',arch:'Nicklaus / Desmond Muirhead, 1974',     season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:29, private:true,  name:'Sebonack GC',                      type:'Links / Coastal',        loc:'Southampton, New York',          country:'🇺🇸',arch:'Nicklaus & Tom Doak, 2006',             season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:30, private:true,  name:'Quaker Ridge GC',                  type:'Parkland',               loc:'Scarsdale, New York',            country:'🇺🇸',arch:'A.W. Tillinghast, 1916',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:31, private:true,  name:'Winged Foot GC (East)',            type:'Parkland',               loc:'Mamaroneck, New York',           country:'🇺🇸',arch:'A.W. Tillinghast, 1923',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:32, private:true,  name:'Olympic Club (Lake)',              type:'Parkland / Coastal',     loc:'San Francisco, California',      country:'🇺🇸',arch:'Wilfrid Reid / Sam Whiting, 1917',     season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:33, private:true,  name:'Merion GC (West)',                  type:'Parkland',               loc:'Ardmore, Pennsylvania',          country:'🇺🇸',arch:'Hugh Wilson, 1914',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:34, private:true,  name:'Peachtree Golf Club',              type:'Parkland',               loc:'Atlanta, Georgia',               country:'🇺🇸',arch:'R.T. Jones Sr. / Bobby Jones, 1948',   season:'winter-friendly',m:[2,2,2,2,2,1,1,1,1,2,2,2]},
+  {rank:35, private:true,  name:'Inverness Club',                   type:'Parkland',               loc:'Toledo, Ohio',                   country:'🇺🇸',arch:'Donald Ross, 1903',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:36, private:true,  name:'Old Sandwich GC',                  type:'Links-style / Dunes',    loc:'Plymouth, Massachusetts',        country:'🇺🇸',arch:'George Thomas Jr. / MacKay Laird',     season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:37, private:false, name:'Spyglass Hill GC',                 type:'Forest / Coastal',       loc:'Pebble Beach, California',       country:'🇺🇸',arch:'Robert Trent Jones, 1966',             season:'year-round',     m:[1,1,1,2,2,2,2,2,2,2,1,1]},
+  {rank:38, private:true,  name:'Saucon Valley CC (Old)',            type:'Parkland',               loc:'Bethlehem, Pennsylvania',        country:'🇺🇸',arch:'William Gordon, 1920',                  season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:39, private:true,  name:'The Country Club (Clyde/Squirrel)',type:'Parkland / Heathland',   loc:'Brookline, Massachusetts',       country:'🇺🇸',arch:'William Flynn, 1909',                  season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:40, private:false, name:'Pasatiempo GC',                    type:'Parkland / Heathland',   loc:'Santa Cruz, California',         country:'🇺🇸',arch:'Alister MacKenzie, 1929',              season:'year-round',     m:[1,1,2,2,2,2,2,2,2,2,2,1]},
+  {rank:41, private:false, name:'Bandon Trails',                    type:'Forest / Dunes',         loc:'Bandon, Oregon',                 country:'🇺🇸',arch:'Coore & Crenshaw, 2001',               season:'mild-season',    m:[0,1,1,2,2,2,2,2,2,2,1,0]},
+  {rank:42, private:false, name:'Streamsong (Blue)',                 type:'Sandhills / Dunes',      loc:'Streamsong, Florida',            country:'🇺🇸',arch:'Tom Doak, 2012',                       season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:43, private:false, name:'Streamsong (Red)',                  type:'Sandhills / Dunes',      loc:'Streamsong, Florida',            country:'🇺🇸',arch:'Coore & Crenshaw, 2012',               season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:44, private:true,  name:'Seminole (West Palm Beach CC)',    type:'Parkland',               loc:'West Palm Beach, Florida',       country:'🇺🇸',arch:'Dick Wilson, 1959',                    season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:45, private:false, name:'Whistling Straits (Irish)',         type:'Links-style',            loc:'Kohler, Wisconsin',              country:'🇺🇸',arch:'Pete Dye, 1998',                       season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:46, private:true,  name:'Plainfield CC',                    type:'Parkland',               loc:'Plainfield, New Jersey',         country:'🇺🇸',arch:'Donald Ross, 1921',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:47, private:true,  name:'Chicago GC',                       type:'Parkland',               loc:'Wheaton, Illinois',              country:'🇺🇸',arch:'C.B. Macdonald / Seth Raynor, 1894',   season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:48, private:true,  name:'Somerset Hills CC',                type:'Parkland',               loc:'Bernardsville, New Jersey',      country:'🇺🇸',arch:'A.W. Tillinghast, 1917',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:49, private:false, name:'Kiawah Island (Ocean Course)',     type:'Links-style / Coastal',  loc:'Kiawah Island, South Carolina',  country:'🇺🇸',arch:'Pete Dye, 1991',                       season:'winter-friendly',m:[2,2,2,2,2,1,1,1,2,2,2,2]},
+  {rank:50, private:true,  name:'Camargo Club',                     type:'Parkland',               loc:'Indian Hill, Ohio',              country:'🇺🇸',arch:'Seth Raynor, 1921',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:51, private:false, name:'Cypress Point Club (Pebble area)', type:'Clifftop Links',         loc:'Pebble Beach, California',       country:'🇺🇸',arch:'Alister MacKenzie',                    season:'year-round',     m:[1,1,1,2,2,2,2,2,2,2,1,1]},
+  {rank:52, private:true,  name:'Kittansett Club',                  type:'Links / Coastal',        loc:'Marion, Massachusetts',          country:'🇺🇸',arch:'Frederick Hood, 1922',                 season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:53, private:true,  name:'Salem CC',                         type:'Parkland',               loc:'Peabody, Massachusetts',         country:'🇺🇸',arch:'Donald Ross, 1925',                    season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:54, private:true,  name:'Pinehurst (No. 2)',                type:'Sandhills / Pinestraw',  loc:'Pinehurst, North Carolina',      country:'🇺🇸',arch:'Donald Ross, 1907',                    season:'mild-season',    m:[1,1,2,2,2,2,1,1,2,2,2,1]},
+  {rank:55, private:false, name:'Monterey Peninsula CC (Dunes)',    type:'Links / Coastal',        loc:'Pebble Beach, California',       country:'🇺🇸',arch:'Seth Raynor / Robert Hunter, 1926',    season:'year-round',     m:[1,1,1,2,2,2,2,2,2,2,1,1]},
+  {rank:56, private:true,  name:'Myopia Hunt Club',                 type:'Parkland',               loc:'South Hamilton, Massachusetts',  country:'🇺🇸',arch:'Herbert Leeds, 1894',                  season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:57, private:true,  name:'Dallas National GC',               type:'Parkland / Canyon',      loc:'Dallas, Texas',                  country:'🇺🇸',arch:'Tom Fazio, 2001',                       season:'spring-fall',    m:[0,0,1,2,2,1,1,1,2,2,1,0]},
+  {rank:58, private:true,  name:'Newport CC',                       type:'Links-style',            loc:'Newport, Rhode Island',          country:'🇺🇸',arch:'William Davis / A.H. Bauer, 1895',     season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:59, private:false, name:'Shadow Creek GC',                  type:'Parkland / Desert',      loc:'North Las Vegas, Nevada',        country:'🇺🇸',arch:'Tom Fazio, 1989',                       season:'mild-season',    m:[1,1,2,2,2,1,1,1,2,2,2,1]},
+  {rank:60, private:true,  name:'Piping Rock Club',                 type:'Parkland',               loc:'Locust Valley, New York',        country:'🇺🇸',arch:'C.B. Macdonald / Seth Raynor, 1913',   season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:61, private:true,  name:'Wade Hampton GC',                  type:'Mountain / Parkland',    loc:'Cashiers, North Carolina',       country:'🇺🇸',arch:'Tom Fazio, 1987',                       season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:62, private:true,  name:'Maidstone Club (East Hampton)',    type:'Links / Coastal',        loc:'East Hampton, New York',         country:'🇺🇸',arch:'Willie Park Jr., 1922',                season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:63, private:true,  name:'Atlantic Golf Club',               type:'Links / Dunes',          loc:'Bridgehampton, New York',        country:'🇺🇸',arch:'Rees Jones, 1992',                     season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:64, private:true,  name:'Canyata GC',                       type:'Parkland / Sculpted',    loc:'Hoopeston, Illinois',            country:'🇺🇸',arch:'Bob Lohmann / Mike Benkusky, 2009',    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:65, private:true,  name:'Deepdale GC',                      type:'Parkland',               loc:'Manhasset, New York',            country:'🇺🇸',arch:'Dick Wilson, 1955',                    season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:66, private:false, name:'Erin Hills GC',                    type:'Links / Dunes',          loc:'Erin, Wisconsin',                country:'🇺🇸',arch:'Ron Whitten / Michael Hurdzan / Dana Fry, 2006', season:'spring-fall', m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:67, private:true,  name:'Colonial CC',                      type:'Parkland / River',       loc:'Fort Worth, Texas',              country:'🇺🇸',arch:'John Bredemus / Perry Maxwell, 1936',  season:'spring-fall',    m:[0,0,1,2,2,1,1,1,2,2,1,0]},
+  {rank:68, private:true,  name:'Baltusrol GC (Lower)',             type:'Parkland',               loc:'Springfield, New Jersey',        country:'🇺🇸',arch:'A.W. Tillinghast, 1922',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:69, private:false, name:'The Lido at Sand Valley',          type:'Links / Dunes',          loc:'Nekoosa, Wisconsin',             country:'🇺🇸',arch:'Tom Doak, 2023',                       season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:70, private:true,  name:'Blind Brook Club',                 type:'Parkland',               loc:'Port Chester, New York',         country:'🇺🇸',arch:'Charles Banks, 1926',                  season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:71, private:false, name:'TPC Sawgrass (Stadium)',           type:'Parkland / Lagoon',      loc:'Ponte Vedra Beach, Florida',     country:'🇺🇸',arch:'Pete Dye, 1980',                        season:'winter-friendly',m:[2,2,2,2,2,1,1,1,1,2,2,2]},
+  {rank:72, private:true,  name:'CapRock Ranch',                    type:'Sandhills / Prairie',    loc:'Post, Texas',                    country:'🇺🇸',arch:'Coore & Crenshaw, 2024',               season:'spring-fall',    m:[0,0,1,2,2,1,1,1,2,2,1,0]},
+  {rank:73, private:false, name:'Streamsong (Black)',               type:'Sandhills / Dunes',      loc:'Streamsong, Florida',            country:'🇺🇸',arch:'Gil Hanse, 2017',                      season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:74, private:false, name:'Sand Valley GC',                   type:'Sandhills / Barrens',    loc:'Nekoosa, Wisconsin',             country:'🇺🇸',arch:'Coore & Crenshaw, 2017',               season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:75, private:true,  name:'Jupiter Hills Club (Hills)',       type:'Parkland',               loc:'Tequesta, Florida',              country:'🇺🇸',arch:'George Fazio / Tom Fazio, 1970',        season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:76, private:true,  name:'Hillside GC',                      type:'Parkland',               loc:'Lemont, Illinois',               country:'🇺🇸',arch:'C.H. Alison / Harry Colt, 1928',       season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:77, private:true,  name:'Onwentsia Club',                   type:'Parkland',               loc:'Lake Forest, Illinois',          country:'🇺🇸',arch:'Tom Bendelow, 1895',                   season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:78, private:true,  name:'Kirtland CC',                      type:'Parkland',               loc:'Willoughby, Ohio',               country:'🇺🇸',arch:'Donald Ross, 1914',                    season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,0,0]},
+  {rank:79, private:true,  name:'Brook Hollow GC',                  type:'Parkland',               loc:'Dallas, Texas',                  country:'🇺🇸',arch:'A.W. Tillinghast, 1920',               season:'spring-fall',    m:[0,0,1,2,2,1,1,1,2,2,1,0]},
+  {rank:80, private:true,  name:'Cypress Creek CC',                 type:'Parkland / Creek',       loc:'Houston, Texas',                 country:'🇺🇸',arch:'Press Maxwell, 1927',                  season:'spring-fall',    m:[0,0,1,2,2,1,1,1,2,2,1,0]},
+  {rank:81, private:true,  name:'Atlanta Athletic Club (Highlands)',type:'Parkland',               loc:'Johns Creek, Georgia',           country:'🇺🇸',arch:'Robert Trent Jones / Joe Lee, 1967',   season:'winter-friendly',m:[2,2,2,2,2,1,1,1,1,2,2,2]},
+  {rank:82, private:true,  name:'Ladera GC',                        type:'Parkland / Ravine',      loc:'Austin, Texas',                  country:'🇺🇸',arch:'Hanse & Wagner, 2022',                 season:'spring-fall',    m:[0,0,1,2,2,1,1,1,2,2,1,0]},
+  {rank:83, private:false, name:'Kapalua (Plantation)',             type:'Mountain / Coastal',     loc:'Kapalua, Maui, Hawaii',          country:'🇺🇸',arch:'Bill Coore / Ben Crenshaw, 1991',       season:'year-round',     m:[2,2,2,2,2,2,2,2,2,2,2,2]},
+  {rank:84, private:true,  name:'Burning Tree Club',                type:'Parkland',               loc:'Bethesda, Maryland',             country:'🇺🇸',arch:'Robert White / George Doelger, 1922',  season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:85, private:true,  name:'CC of Virginia (James River)',     type:'Parkland',               loc:'Richmond, Virginia',             country:'🇺🇸',arch:'A.W. Tillinghast, 1923',               season:'mild-season',    m:[0,1,2,2,2,2,2,2,2,2,1,0]},
+  {rank:86, private:false, name:'Pinehurst (No. 4)',                type:'Sandhills / Pinestraw',  loc:'Pinehurst, North Carolina',      country:'🇺🇸',arch:'Tom Fazio / Gil Hanse, 2000',           season:'mild-season',    m:[1,1,2,2,2,2,1,1,2,2,2,1]},
+  {rank:87, private:true,  name:'Somerset Hills CC (NJ)',           type:'Parkland',               loc:'Bernardsville, New Jersey',      country:'🇺🇸',arch:'A.W. Tillinghast, 1917',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:88, private:true,  name:'Baltusrol GC (Upper)',             type:'Parkland',               loc:'Springfield, New Jersey',        country:'🇺🇸',arch:'A.W. Tillinghast, 1922',               season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:89, private:true,  name:'Panther National GC',              type:'Desert / Parkland',      loc:'Palm Beach Gardens, Florida',    country:'🇺🇸',arch:'Jack Nicklaus, 2024',                  season:'winter-friendly',m:[2,2,2,2,1,1,0,0,1,2,2,2]},
+  {rank:90, private:false, name:'Chambers Bay GC',                  type:'Links / Coastal',        loc:'University Place, Washington',   country:'🇺🇸',arch:'Robert Trent Jones Jr., 2007',          season:'mild-season',    m:[0,1,1,2,2,2,2,2,2,2,1,0]},
+  {rank:91, private:false, name:'Sedge Valley at Sand Valley',      type:'Sandhills / Barrens',    loc:'Nekoosa, Wisconsin',             country:'🇺🇸',arch:'Tom Doak, 2023',                       season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:92, private:true,  name:'Congressional CC (Blue)',          type:'Parkland',               loc:'Bethesda, Maryland',             country:'🇺🇸',arch:'Devereux Emmet, 1924',                 season:'spring-fall',    m:[0,0,1,2,2,2,2,2,2,1,1,0]},
+  {rank:93, private:false, name:'Bandon Preserve',                  type:'Links / Coastal',        loc:'Bandon, Oregon',                 country:'🇺🇸',arch:'Tom Doak, 2012',                       season:'mild-season',    m:[0,1,1,2,2,2,2,2,2,2,1,0]},
+  {rank:94, private:true,  name:'Southern Dunes GC',                type:'Sandhills / Dunes',      loc:'Maricopa, Arizona',              country:'🇺🇸',arch:'Lee Schmidt / Brian Curley, 1993',      season:'mild-season',    m:[1,1,2,2,1,0,0,0,1,2,2,1]},
+  {rank:95, private:true,  name:'Wolf Point Club',                  type:'Links / Prairie',        loc:'Wolf Point, Montana',            country:'🇺🇸',arch:'Gil Hanse, 2020',                      season:'summer-primary', m:[0,0,0,1,2,2,2,2,1,0,0,0]},
+  {rank:96, private:false, name:'Pinehurst (No. 8)',                type:'Sandhills / Pinestraw',  loc:'Pinehurst, North Carolina',      country:'🇺🇸',arch:'Tom Fazio, 1996',                       season:'mild-season',    m:[1,1,2,2,2,2,1,1,2,2,2,1]},
+  {rank:97, private:true,  name:'Alotian Club',                     type:'Parkland',               loc:'Roland, Arkansas',               country:'🇺🇸',arch:'Tom Fazio, 2004',                       season:'spring-fall',    m:[0,0,1,2,2,2,1,1,2,2,1,0]},
+  {rank:98, private:true,  name:'Childress Hall (Upper)',            type:'Sandhills / Prairie',    loc:'Childress, Texas',               country:'🇺🇸',arch:'Tom Doak, 2025',                       season:'spring-fall',    m:[0,0,1,2,2,1,1,1,2,2,1,0]},
+  {rank:99, private:false, name:'Mammoth Dunes at Sand Valley',     type:'Sandhills / Barrens',    loc:'Nekoosa, Wisconsin',             country:'🇺🇸',arch:'David McLay Kidd, 2019',               season:'spring-fall',    m:[0,0,0,1,2,2,2,2,2,1,0,0]},
+  {rank:100,private:false, name:'Pinehurst (No. 9)',                type:'Sandhills / Pinestraw',  loc:'Pinehurst, North Carolina',      country:'🇺🇸',arch:'Donald Ross, 1927',                    season:'mild-season',    m:[1,1,2,2,2,2,1,1,2,2,2,1]},
+];
+
+function switchList(list, btn){
+  activeList = list;
+  loadData();
+  // Update toggle buttons
+  document.querySelectorAll('.list-toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Update header subtitle and section title
+  const isWorld = list==='world';
+  document.getElementById('header-subtitle').textContent = isWorld
+    ? 'The World Top 100 · A Father, Wife & Daughter Bucket List'
+    : 'US Top 100 · America\'s Greatest Courses';
+  document.getElementById('all-section-title').textContent = isWorld
+    ? 'World Top 100 — Ranked #1 to #100'
+    : 'US Top 100 — Ranked #1 to #100';
+  // Rebuild all tbodies
+  rebuildAllTbodies();
+  // Reset season filter
+  currentSeasonFilter='all';
+  document.querySelectorAll('.filter-btn:not(#played-filter-btn)').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.filter-btn').classList.add('active');
+  showPlayedOnly=false;
+  document.getElementById('played-filter-btn').classList.remove('played-active');
+  filterCourses();
+  updateStats();
+}
+
+function rebuildAllTbodies(){
+  // Clear all tbodies
+  ['tbody-all','tbody-yearround','tbody-spring-fall','tbody-summer-primary','tbody-mild-season','tbody-winter-friendly'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML='';
+  });
+  const courses=currentCourses();
+  courses.forEach(c=>{
+    const tbodyId=seasonMap[c.season]; if(!tbodyId) return;
+    document.getElementById(tbodyId).insertAdjacentHTML('beforeend',buildRow(c));
+  });
+  [...courses].sort((a,b)=>a.rank-b.rank).forEach(c=>{
+    document.getElementById('tbody-all').insertAdjacentHTML('beforeend',buildRow(c));
+  });
+  // Update section counts
+  const counts={};
+  courses.forEach(c=>{ counts[c.season]=(counts[c.season]||0)+1; });
+  const countLabels={'year-round':'count-yearround','spring-fall':'count-spring-fall','summer-primary':'count-summer-primary','mild-season':'count-mild-season','winter-friendly':'count-winter-friendly'};
+  Object.entries(countLabels).forEach(([k,id])=>{ const el=document.getElementById(id); if(el) el.textContent=(counts[k]||0)+' courses'; });
+}
+const seasonMap={'year-round':'tbody-yearround','spring-fall':'tbody-spring-fall','summer-primary':'tbody-summer-primary','mild-season':'tbody-mild-season','winter-friendly':'tbody-winter-friendly'};
+let currentSeasonFilter='all', showPlayedOnly=false, modalRank=null;
+
+function buildPlayedCell(rank,pd){
+  if(!pd) return `<button class="check-btn" title="Log round" onclick="event.stopPropagation();openModal(${rank})">✓</button>`;
+  const dateStr=pd.date?new Date(pd.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}):'';
+  const companions=pd.companions?pd.companions.split(',').map(s=>s.trim()).filter(Boolean):[];
+  const rap=pd.rankAtPlay||rank;
+  const rankBadge=`<div class="rank-at-play">#${rap} when played${rap!==rank?` <span class="rank-drift" title="Now ranked #${rank}">(now #${rank})</span>`:''}</div>`;
+  return `<button class="check-btn checked" title="Played! Click to edit" onclick="event.stopPropagation();openModal(${rank})">✓</button>
+    <div class="played-meta">${rankBadge}${dateStr?`<div>${dateStr}</div>`:''}${companions.length?`<div class="companions">w/ ${companions.join(', ')}</div>`:''}</div>`;
+}
+
+function buildRow(c){
+  const key=`r${c.rank}`, pd=playedData[key];
+  const safeName=c.name.toLowerCase().replace(/"/g,'').replace(/'/g,'');
+  const safeLoc=c.loc.toLowerCase().replace(/"/g,'').replace(/'/g,'');
+  const safeArch=c.arch.toLowerCase().replace(/"/g,'').replace(/'/g,'');
+  const privateBadge=c.private?`<span class="private-badge">Private</span>`:'';
+  const listPfx=activeList;
+  return `<tr id="row-${listPfx}-${c.rank}" data-rank="${c.rank}" data-season="${c.season}"
+    data-name="${safeName}" data-country="${c.country}"
+    data-arch="${safeArch}" data-loc="${safeLoc}"
+    class="${pd?'played-row':''}" onclick="openModal(${c.rank})">
+    <td class="rank">${c.rank}</td>
+    <td class="col-course">
+      <div class="course-name-row"><span class="course-name">${c.name}</span>${privateBadge}</div>
+      <div class="course-type">${c.type}</div>
+      <div class="location-line">${c.loc} <span class="inline-flag">${c.country}</span></div>
+    </td>
+    <td class="country-flag desktop-only">${c.country}</td>
+    <td class="architect">${c.arch}</td>
+    <td><div class="months-cell">${monthPips(c.m)}</div></td>
+    <td class="played-cell" id="played-cell-${listPfx}-${c.rank}">${buildPlayedCell(c.rank,pd)}</td>
+  </tr>`;
+}
+
+function openModal(rank){
+  const c=currentCourses().find(x=>x.rank===rank); if(!c) return;
+  modalRank=rank;
+  const key=`r${rank}`, pd=playedData[key];
+  document.getElementById('modal-type').textContent=c.type.toUpperCase();
+  document.getElementById('modal-rank').textContent=`RANK #${rank} · ${c.country}`;
+  document.getElementById('modal-name').textContent=c.name;
+  document.getElementById('modal-loc').textContent=c.loc;
+  document.getElementById('modal-rank-played').value=pd?.rankAtPlay??rank;
+  document.getElementById('modal-date').value=pd?.date||'';
+  document.getElementById('modal-companions').value=pd?.companions||'';
+  document.getElementById('modal-notes').value=pd?.notes||'';
+  document.getElementById('btn-unplay').classList.toggle('hidden',!pd);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); modalRank=null; }
+function closeModalOutside(e){ if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+
+function syncToOtherList(courseName, entry){
+  // Find the course on the other list by name match
+  const otherList = activeList==='world'?'us':'world';
+  const otherCourses = otherList==='world'?COURSES:US_COURSES;
+  const otherSK = otherList==='world'?SK_WORLD:SK_US;
+  const match = otherCourses.find(c=>c.name.toLowerCase()===courseName.toLowerCase());
+  if(!match) return;
+  try {
+    const raw = localStorage.getItem(otherSK);
+    const otherData = raw ? JSON.parse(raw) : {};
+    if(entry===null){
+      delete otherData[`r${match.rank}`];
+    } else {
+      // Preserve the rank-at-play for the other list's own rank
+      otherData[`r${match.rank}`] = { ...entry, rankAtPlay: match.rank };
+    }
+    localStorage.setItem(otherSK, JSON.stringify(otherData));
+  } catch(e){}
+}
+
+function saveRound(){
+  if(!modalRank) return;
+  const c = currentCourses().find(x=>x.rank===modalRank);
+  const entry = {
+    rankAtPlay:parseInt(document.getElementById('modal-rank-played').value)||modalRank,
+    date:document.getElementById('modal-date').value,
+    companions:document.getElementById('modal-companions').value.trim(),
+    notes:document.getElementById('modal-notes').value.trim()
+  };
+  playedData[`r${modalRank}`]=entry;
+  saveData();
+  if(c) syncToOtherList(c.name, entry);
+  updateRow(modalRank); updateStats(); closeModal();
+}
+function unlogRound(){
+  if(!modalRank) return;
+  const c = currentCourses().find(x=>x.rank===modalRank);
+  delete playedData[`r${modalRank}`];
+  saveData();
+  if(c) syncToOtherList(c.name, null);
+  updateRow(modalRank); updateStats(); closeModal();
+}
+function updateRow(rank){
+  const key=`r${rank}`, pd=playedData[key];
+  const row=document.getElementById(`row-${activeList}-${rank}`);
+  if(row){ row.className=pd?'played-row':''; }
+  const cell=document.getElementById(`played-cell-${activeList}-${rank}`);
+  if(cell) cell.innerHTML=buildPlayedCell(rank,pd);
+}
+function updateStats(){
+  const n=Object.keys(playedData).length;
+  document.getElementById('stat-played').textContent=n;
+  document.getElementById('stat-remaining').textContent=100-n;
+  document.getElementById('stat-pct').textContent=n+'%';
+  document.getElementById('progress-fill').style.width=n+'%';
+}
+
+function filterCourses(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  let anyVisible=false;
+
+  if(currentSeasonFilter==='all'){
+    // Show the unified all-section, hide season sections
+    document.getElementById('section-all').style.display='';
+    document.querySelectorAll('.section:not(#section-all)').forEach(s=>s.style.display='none');
+    document.querySelectorAll('#tbody-all tr').forEach(row=>{
+      const matchSearch=!q||row.dataset.name.includes(q)||row.dataset.loc.includes(q)||row.dataset.arch.includes(q);
+      const matchPlayed=!showPlayedOnly||!!playedData[`r${row.dataset.rank}`];
+      const show=matchSearch&&matchPlayed;
+      row.classList.toggle('hidden',!show);
+      if(show) anyVisible=true;
+    });
+  } else {
+    // Hide the all-section, show season sections
+    document.getElementById('section-all').style.display='none';
+    document.querySelectorAll('.section:not(#section-all)').forEach(section=>{
+      const matchSeason=section.dataset.season===currentSeasonFilter;
+      section.style.display=matchSeason?'':'none';
+      if(matchSeason){
+        section.querySelectorAll('tbody tr').forEach(row=>{
+          const matchSearch=!q||row.dataset.name.includes(q)||row.dataset.loc.includes(q)||row.dataset.arch.includes(q);
+          const matchPlayed=!showPlayedOnly||!!playedData[`r${row.dataset.rank}`];
+          const show=matchSearch&&matchPlayed;
+          row.classList.toggle('hidden',!show);
+          if(show) anyVisible=true;
+        });
+        const hasVisible=section.querySelectorAll('tbody tr:not(.hidden)').length>0;
+        if(!hasVisible) section.style.display='none';
+      }
+    });
+    anyVisible=document.querySelectorAll('.section:not(#section-all) tbody tr:not(.hidden)').length>0;
+  }
+  document.getElementById('no-results').style.display=anyVisible?'none':'block';
+}
+function filterSeason(season,btn){
+  currentSeasonFilter=season;
+  document.querySelectorAll('.filter-btn:not(#played-filter-btn)').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filterCourses();
+}
+function togglePlayedFilter(btn){
+  showPlayedOnly=!showPlayedOnly;
+  btn.classList.toggle('played-active',showPlayedOnly);
+  if(showPlayedOnly) btn.classList.remove('active');
+  filterCourses();
+}
+
+// INIT
+loadData();
+rebuildAllTbodies();
+document.getElementById('section-all').style.display='';
+document.querySelectorAll('.section:not(#section-all)').forEach(s=>s.style.display='none');
+updateStats();
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+</script>
+</body>
+</html>
